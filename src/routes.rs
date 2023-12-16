@@ -1,24 +1,47 @@
-use std::{
-    fmt::{Display, Formatter},
-    sync::Arc,
-};
+use std::sync::Arc;
 
 use axum::{
     extract::State,
-    response::Result,
+    http::StatusCode,
+    response::{IntoResponse, Response, Result},
     routing::{get, post},
     Json, Router,
 };
+use maud::Markup;
+use rspc::Config;
 pub use rspc::RouterBuilder;
-use rspc::{Config, Error, ErrorCode};
 use serde::Deserialize;
 use std::path::PathBuf;
+use tower_http::cors::CorsLayer;
 
 #[derive(Clone)]
 pub struct Ctx {}
 pub type PublicRouter = rspc::Router<Ctx>;
 
-use crate::{repository::task_repository::Task, service::task_service::TaskService};
+use crate::{
+    repository::task_repository::Task,
+    service::task_service::TaskService,
+    views::{self, todo::index},
+};
+pub struct AppError(anyhow::Error);
+impl IntoResponse for AppError {
+    fn into_response(self) -> Response {
+        (StatusCode::INTERNAL_SERVER_ERROR, self.0.to_string()).into_response()
+    }
+}
+
+impl<E> From<E> for AppError
+where
+    E: Into<anyhow::Error>,
+{
+    fn from(err: E) -> Self {
+        Self(err.into())
+    }
+}
+
+async fn data() -> Result<Markup, AppError> {
+    Ok(views::todo::index())
+}
 
 pub(crate) fn what() -> RouterBuilder<Ctx> {
     PublicRouter::new()
@@ -29,7 +52,7 @@ pub(crate) fn what() -> RouterBuilder<Ctx> {
                     .join("web//src/utils/api.ts"),
             ),
         )
-        .query("omega=what", |t| t(|_, _: ()| Ok("ok===what=again")))
+        .query("omega=what", |t| t(|_, _: ()| Ok("ok")))
 }
 
 #[derive(Clone)]
@@ -67,16 +90,17 @@ async fn api_get_todo_handler(
     }
 }
 
-pub fn new(task_service: Arc<TaskService>) -> axum::Router {
+pub fn new(cors: CorsLayer, task_service: Arc<TaskService>) -> axum::Router {
     let api = Api { task_service };
 
     let rspc = what().build().arced();
 
     Router::new()
         .route("/api/test", post(api_login_handler))
-        .route("/api/get", get(api_get_todo_handler))
+        .route("/api/get", get(data))
         .nest("/rspc", rspc.endpoint(|| Ctx {}).axum())
         .with_state(api)
+        .layer(cors)
 }
 
 #[derive(Debug, Deserialize)]
