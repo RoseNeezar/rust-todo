@@ -3,7 +3,7 @@ use eyre::Result;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
-use crate::model::ModelManager;
+use crate::model::model_manager::ModelManager;
 
 #[derive(Debug, Clone, FromRow, Serialize, Deserialize)]
 pub struct TaskEntity {
