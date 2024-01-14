@@ -3,11 +3,10 @@ use std::sync::Arc;
 use axum::{
     extract::State,
     http::StatusCode,
-    response::{IntoResponse, Response, Result},
-    routing::{get, post},
+    response::{IntoResponse, Response},
+    routing::get,
     Json, Router,
 };
-use maud::Markup;
 use rspc::Config;
 pub use rspc::RouterBuilder;
 use serde::Deserialize;
@@ -18,12 +17,9 @@ use tower_http::cors::CorsLayer;
 pub struct Ctx {}
 pub type PublicRouter = rspc::Router<Ctx>;
 
-use crate::{
-    repository::task_repository::Task,
-    service::task_service::TaskService,
-    views::{self, todo::index},
-};
+use crate::service::task_service::TaskService;
 pub struct AppError(anyhow::Error);
+
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         (StatusCode::INTERNAL_SERVER_ERROR, self.0.to_string()).into_response()
@@ -37,10 +33,6 @@ where
     fn from(err: E) -> Self {
         Self(err.into())
     }
-}
-
-async fn data() -> Result<Markup, AppError> {
-    Ok(views::todo::index())
 }
 
 pub(crate) fn what() -> RouterBuilder<Ctx> {
@@ -60,25 +52,15 @@ pub struct Api {
     task_service: Arc<TaskService>,
 }
 
-async fn api_login_handler(
-    State(mm): State<Api>,
-    Json(payload): Json<LoginPayload>,
-) -> Result<Json<Task>, String> {
-    let new_todo = mm.task_service.create_todo(payload.title).await;
-    dbg!("{:?}", &new_todo);
-
-    match new_todo {
-        Ok(todo) => Ok(Json(todo)),
-        Err(e) => match e {
-            _ => Err(e.to_string()),
-        },
-    }
+#[derive(Debug, Deserialize)]
+struct GetTodoPayload {
+    id: i64,
 }
 
 async fn api_get_todo_handler(
     State(mm): State<Api>,
     Json(payload): Json<GetTodoPayload>,
-) -> Result<Json<Task>, String> {
+) -> impl IntoResponse {
     let todo = mm.task_service.get_todo(payload.id).await;
     dbg!("{:?}", &todo);
 
@@ -96,19 +78,9 @@ pub fn new(cors: CorsLayer, task_service: Arc<TaskService>) -> axum::Router {
     let rspc = what().build().arced();
 
     Router::new()
-        .route("/api/test", post(api_login_handler))
-        .route("/api/get", get(data))
+        .route("/api/get", get(api_get_todo_handler))
         .nest("/rspc", rspc.endpoint(|| Ctx {}).axum())
+        .with_state(api.clone())
         .with_state(api)
         .layer(cors)
-}
-
-#[derive(Debug, Deserialize)]
-struct GetTodoPayload {
-    id: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct LoginPayload {
-    title: String,
 }
