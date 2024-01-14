@@ -19,7 +19,7 @@ pub fn index() -> Markup {
             div class="border max-w-7xl" {
 
               div class="bgr-red-300 w-10 h-10" {
-               "wht"
+               h1{"pl"}
               }
             }
         }

@@ -10,7 +10,7 @@ use axum::{
 use maud::Markup;
 use rspc::Config;
 pub use rspc::RouterBuilder;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use tower_http::cors::CorsLayer;
 
@@ -21,6 +21,7 @@ pub type PublicRouter = rspc::Router<Ctx>;
 use crate::{
     repository::task_repository::Task,
     service::task_service::TaskService,
+    util::html::HtmlTemplate,
     views::{self, todo::index},
 };
 pub struct AppError(anyhow::Error);
@@ -78,7 +79,7 @@ async fn api_login_handler(
 async fn api_get_todo_handler(
     State(mm): State<Api>,
     Json(payload): Json<GetTodoPayload>,
-) -> Result<Json<Task>, String> {
+) -> impl IntoResponse {
     let todo = mm.task_service.get_todo(payload.id).await;
     dbg!("{:?}", &todo);
 
@@ -90,15 +91,50 @@ async fn api_get_todo_handler(
     }
 }
 
+use askama::Template;
+use std::fmt;
+
+#[derive(Serialize)]
+pub struct TopicList<'a> {
+    pub id: i64,
+    pub title: &'a str,
+}
+
+impl<'a> fmt::Display for TopicList<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let json_string = serde_json::to_string(self).map_err(|_| fmt::Error)?;
+
+        // Write the JSON string to the formatter
+        write!(f, "{}", json_string)
+    }
+}
+
+#[derive(Template)]
+#[template(path = "index.html")]
+pub struct IndexTemplate<'a> {
+    pub list: TopicList<'a>,
+}
+
+pub async fn index_Html() -> impl IntoResponse {
+    let template = IndexTemplate {
+        list: TopicList {
+            id: 32,
+            title: "whooooo",
+        },
+    };
+    HtmlTemplate(template)
+}
+
 pub fn new(cors: CorsLayer, task_service: Arc<TaskService>) -> axum::Router {
     let api = Api { task_service };
 
     let rspc = what().build().arced();
 
     Router::new()
-        .route("/api/test", post(api_login_handler))
-        .route("/api/get", get(data))
+        .route("/api/test", get(index_Html))
+        .route("/api/get", get(api_get_todo_handler))
         .nest("/rspc", rspc.endpoint(|| Ctx {}).axum())
+        .with_state(api.clone())
         .with_state(api)
         .layer(cors)
 }

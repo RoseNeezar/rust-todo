@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <script src="//unpkg.com/alpinejs" defer></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+    integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
+  <head>
+    <title>TODO-ASKAMA-HTMX</title>
+  </head>
+  <body x-data="app">
+    <div x-init="init('{{list}}')" class="bg-red-200">
+      <h1>hello - {{list.id}}</h1>
+      <h2 x-text="on1"></h2>
+      <h2 x-text="data"></h2>
+      <span x-text="new Date().getFullYear()"></span>
+      <button x-on:click="check()">clll</button>
+    </div>
+  </body>
+  <script>
+    document.addEventListener("alpine:init", () => {
+      Alpine.data("app", () => ({
+        data: {},
+        on1: "Whoooo",
+        init(data) {
+          this.data = data;
+        },
+        check() {
+          console.log(this.data, typeof this.data);
+          let t = JSON.parse(this.data);
+          console.log("=i=", t.id);
+          console.log("=ti=", t.title);
+        },
+      }));
+    });
+  </script>
+</html>
