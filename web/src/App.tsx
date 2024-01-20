@@ -2,7 +2,7 @@ import { rspc } from "./utils/rspc";
 import React, { useState, useEffect } from "react";
 
 function App() {
-  const { data: d } = rspc.useQuery(["omega=what"]);
+  const { data: d } = rspc.useQuery(["todo.get", 1]);
   const [htmlContent, setHtmlContent] = useState("");
   const [showHtml, setShowHtml] = useState(false);
 
@@ -19,7 +19,7 @@ function App() {
 
   return (
     <div>
-      <h1>You are running v{d}</h1>
+      <h1>You are running v{d?.id}</h1>
       <button onClick={fetchData}>Fetch HTML</button>
       {showHtml && <div dangerouslySetInnerHTML={{ __html: htmlContent }} />}
     </div>

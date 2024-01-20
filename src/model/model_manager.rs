@@ -5,7 +5,7 @@ use super::store::store::{new_db_pool, Db};
 
 // endregion: --- Modules
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ModelManager {
     pub db: Db,
 }

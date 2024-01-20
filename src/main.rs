@@ -13,10 +13,10 @@ use tower_http::cors::CorsLayer;
 mod config;
 mod model;
 mod repository;
+mod router;
 mod routes;
 mod service;
 mod util;
-mod views;
 
 #[tokio::main]
 async fn main() {

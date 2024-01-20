@@ -2,7 +2,11 @@
 
 export type Procedures = {
     queries: 
-        { key: "omega=what", input: never, result: string },
+        { key: "todo.get", input: number, result: Task },
     mutations: never,
     subscriptions: never
 };
+
+export type TaskStatus = "Undone" | "Done"
+
+export type Task = { id: number; title: string; status: TaskStatus }
