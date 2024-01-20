@@ -1,11 +1,11 @@
+use crate::model::model_manager::ModelManager;
 use chrono::{DateTime, Utc};
 use eyre::Result;
+use rspc::{ErrorCode, Type};
 use serde::{Deserialize, Serialize};
-use sqlx::{prelude::Type, FromRow};
+use sqlx::FromRow;
 
-use crate::model::model_manager::ModelManager;
-
-#[derive(Debug, Clone, Serialize, Type, Deserialize)]
+#[derive(Debug, Clone, Serialize, sqlx::prelude::Type, Deserialize, Type)]
 #[sqlx(type_name = "status_enum", rename_all = "lowercase")]
 pub enum TaskStatus {
     Undone,
@@ -23,16 +23,16 @@ impl std::fmt::Display for TaskStatus {
 
 #[derive(Debug, Clone, FromRow, Serialize, Deserialize)]
 pub struct TaskEntity {
-    id: i64,
+    id: i32,
     title: String,
     status: TaskStatus,
     created_at: DateTime<Utc>,
     updated_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Clone, FromRow, Serialize)]
+#[derive(Debug, Clone, FromRow, Serialize, Type)]
 pub struct Task {
-    pub id: i64,
+    pub id: i32,
     pub title: String,
     pub status: TaskStatus,
 }
@@ -46,7 +46,7 @@ impl From<TaskEntity> for Task {
         }
     }
 }
-
+#[derive(Clone, Debug)]
 pub struct TaskRepository {
     mm: ModelManager,
 }
@@ -68,20 +68,28 @@ impl TaskRepository {
         Ok(Task::from(entity))
     }
 
-    pub async fn get_task(&self, id: i64) -> Result<Task> {
+    pub async fn get_task(&self, id: i32) -> Result<Task, rspc::Error> {
         let query = "select * from tasks where id = $1";
 
         let mut entity = sqlx::query_as::<_, TaskEntity>(query)
             .bind(id)
             .fetch_one(self.mm.db())
-            .await?;
+            .await;
 
-        entity.status = entity.status.try_into().unwrap();
+        match entity {
+            Ok(mut data) => {
+                data.status = data.status.try_into().unwrap();
 
-        Ok(Task::from(entity))
+                Ok(Task::from(data))
+            }
+            Err(_) => Err(rspc::Error::new(
+                ErrorCode::BadRequest,
+                "This is a custom error!".into(),
+            )),
+        }
     }
 
-    pub async fn get_tasks(&self, page_size: i64, page_number: i64) -> Result<Vec<Task>> {
+    pub async fn get_tasks(&self, page_size: i32, page_number: i32) -> Result<Vec<Task>> {
         let offset = (page_number - 1) * page_size;
 
         let query = " SELECT id, title, status, created_at, updated_at
@@ -102,7 +110,7 @@ impl TaskRepository {
 
     pub async fn update_task(
         &self,
-        id: i64,
+        id: i32,
         title: Option<&str>,        // Optional title
         status: Option<TaskStatus>, // Optional status
     ) -> Result<Task, sqlx::Error> {
@@ -132,7 +140,7 @@ impl TaskRepository {
         Ok(entities)
     }
 
-    pub async fn delete(&self, id: i64) -> Result<(), sqlx::Error> {
+    pub async fn delete(&self, id: i32) -> Result<(), sqlx::Error> {
         let query = " DELETE FROM tasks
     WHERE id = $1";
 

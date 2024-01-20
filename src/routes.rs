@@ -13,11 +13,9 @@ use serde::Deserialize;
 use std::path::PathBuf;
 use tower_http::cors::CorsLayer;
 
-#[derive(Clone)]
-pub struct Ctx {}
-pub type PublicRouter = rspc::Router<Ctx>;
+pub type PublicRouter = rspc::Router<Api>;
 
-use crate::service::task_service::TaskService;
+use crate::{router::todo_router::todo_router, service::task_service::TaskService};
 pub struct AppError(anyhow::Error);
 
 impl IntoResponse for AppError {
@@ -35,7 +33,7 @@ where
     }
 }
 
-pub(crate) fn what() -> RouterBuilder<Ctx> {
+fn api_router() -> rspc::Router<Api> {
     PublicRouter::new()
         .config(
             Config::new().export_ts_bindings(
@@ -44,43 +42,20 @@ pub(crate) fn what() -> RouterBuilder<Ctx> {
                     .join("web//src/utils/api.ts"),
             ),
         )
-        .query("omega=what", |t| t(|_, _: ()| Ok("ok")))
+        .merge("todo.", todo_router())
+        .build()
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Api {
-    task_service: Arc<TaskService>,
-}
-
-#[derive(Debug, Deserialize)]
-struct GetTodoPayload {
-    id: i64,
-}
-
-async fn api_get_todo_handler(
-    State(mm): State<Api>,
-    Json(payload): Json<GetTodoPayload>,
-) -> impl IntoResponse {
-    let todo = mm.task_service.get_todo(payload.id).await;
-    dbg!("{:?}", &todo);
-
-    match todo {
-        Ok(todo) => Ok(Json(todo)),
-        Err(e) => match e {
-            _ => Err(e.to_string()),
-        },
-    }
+    pub task_service: Arc<TaskService>,
 }
 
 pub fn new(cors: CorsLayer, task_service: Arc<TaskService>) -> axum::Router {
-    let api = Api { task_service };
-
-    let rspc = what().build().arced();
+    let rspc = api_router().arced();
 
     Router::new()
-        .route("/api/get", get(api_get_todo_handler))
-        .nest("/rspc", rspc.endpoint(|| Ctx {}).axum())
-        .with_state(api.clone())
-        .with_state(api)
+        .route("/", get(|| async { "Hello 'rspc'!" }))
+        .nest("/rspc", rspc.endpoint(|| Api { task_service }).axum())
         .layer(cors)
 }
