@@ -1,37 +1,14 @@
 use std::sync::Arc;
 
-use axum::{
-    extract::State,
-    http::StatusCode,
-    response::{IntoResponse, Response},
-    routing::get,
-    Json, Router,
-};
+use axum::{routing::get, Router};
 use rspc::Config;
 pub use rspc::RouterBuilder;
-use serde::Deserialize;
 use std::path::PathBuf;
 use tower_http::cors::CorsLayer;
 
 pub type PublicRouter = rspc::Router<Api>;
 
 use crate::{router::todo_router::todo_router, service::task_service::TaskService};
-pub struct AppError(anyhow::Error);
-
-impl IntoResponse for AppError {
-    fn into_response(self) -> Response {
-        (StatusCode::INTERNAL_SERVER_ERROR, self.0.to_string()).into_response()
-    }
-}
-
-impl<E> From<E> for AppError
-where
-    E: Into<anyhow::Error>,
-{
-    fn from(err: E) -> Self {
-        Self(err.into())
-    }
-}
 
 fn api_router() -> rspc::Router<Api> {
     PublicRouter::new()

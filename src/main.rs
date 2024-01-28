@@ -11,6 +11,7 @@ use std::sync::Arc;
 use tower_http::cors::CorsLayer;
 
 mod config;
+mod errors;
 mod model;
 mod repository;
 mod router;

@@ -1,4 +1,5 @@
-use crate::model::model_manager::ModelManager;
+use crate::{errors::ErrorResponse, model::model_manager::ModelManager};
+use anyhow::ensure;
 use chrono::{DateTime, Utc};
 use eyre::Result;
 use rspc::{ErrorCode, Type};
@@ -68,25 +69,15 @@ impl TaskRepository {
         Ok(Task::from(entity))
     }
 
-    pub async fn get_task(&self, id: i32) -> Result<Task, rspc::Error> {
+    pub async fn get_task(&self, id: i32) -> Result<Task> {
         let query = "select * from tasks where id = $1";
 
-        let mut entity = sqlx::query_as::<_, TaskEntity>(query)
+        let entity = sqlx::query_as::<_, TaskEntity>(query)
             .bind(id)
             .fetch_one(self.mm.db())
-            .await;
+            .await?;
 
-        match entity {
-            Ok(mut data) => {
-                data.status = data.status.try_into().unwrap();
-
-                Ok(Task::from(data))
-            }
-            Err(_) => Err(rspc::Error::new(
-                ErrorCode::BadRequest,
-                "This is a custom error!".into(),
-            )),
-        }
+        Ok(Task::from(entity))
     }
 
     pub async fn get_tasks(&self, page_size: i32, page_number: i32) -> Result<Vec<Task>> {
@@ -113,7 +104,7 @@ impl TaskRepository {
         id: i32,
         title: Option<&str>,        // Optional title
         status: Option<TaskStatus>, // Optional status
-    ) -> Result<Task, sqlx::Error> {
+    ) -> Result<Task> {
         let mut query = "UPDATE tasks SET ".to_string();
         let mut binds: Vec<String> = Vec::new();
 
@@ -140,7 +131,7 @@ impl TaskRepository {
         Ok(entities)
     }
 
-    pub async fn delete(&self, id: i32) -> Result<(), sqlx::Error> {
+    pub async fn delete(&self, id: i32) -> Result<()> {
         let query = " DELETE FROM tasks
     WHERE id = $1";
 

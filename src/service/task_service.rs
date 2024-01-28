@@ -1,4 +1,4 @@
-use std::{fmt::Error, sync::Arc};
+use std::sync::Arc;
 
 use crate::repository::task_repository::{Task, TaskRepository, TaskStatus};
 #[derive(Clone, Debug)]
@@ -16,7 +16,7 @@ impl TaskService {
         new_task
     }
 
-    pub async fn get_todo(&self, id: i32) -> eyre::Result<Task, rspc::Error> {
+    pub async fn get_todo(&self, id: i32) -> eyre::Result<Task> {
         let task = self.task_repository.get_task(id).await;
         task
     }
@@ -29,14 +29,15 @@ impl TaskService {
     pub async fn update_todo(
         &self,
         id: i32,
-        title: Option<&str>, // Optional title
+        title: Option<&str>,
         status: Option<TaskStatus>,
     ) -> eyre::Result<Task> {
         let tasks = self.task_repository.update_task(id, title, status).await;
-        Ok(tasks?)
+        tasks
     }
 
-    pub async fn delete_todo(&self, id: i32) -> () {
-        self.task_repository.delete(id).await;
+    pub async fn delete_todo(&self, id: i32) -> eyre::Result<bool> {
+        let _ = self.task_repository.delete(id).await;
+        eyre::Ok(true)
     }
 }
