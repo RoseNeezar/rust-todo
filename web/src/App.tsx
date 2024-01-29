@@ -1,8 +1,11 @@
+import { Button } from "./components/ui/button";
 import { rspc } from "./utils/rspc";
 import React, { useState, useEffect } from "react";
 
 function App() {
-  const { data: d } = rspc.useQuery(["todo.get", 1]);
+  const { data: d } = rspc.useQuery(["todo.get", 1], {
+    enabled: false,
+  });
   const [htmlContent, setHtmlContent] = useState("");
   const [showHtml, setShowHtml] = useState(false);
 
@@ -20,7 +23,7 @@ function App() {
   return (
     <div>
       <h1>You are running v{d?.id}</h1>
-      <button onClick={fetchData}>Fetch HTML</button>
+      <Button onClick={fetchData}>Fetch HTML fef</Button>
       {showHtml && <div dangerouslySetInnerHTML={{ __html: htmlContent }} />}
     </div>
   );
