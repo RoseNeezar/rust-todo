@@ -15,19 +15,30 @@ pub fn todo_router() -> RouterBuilder<Api> {
                     Ok(data) => Ok(data),
                     Err(e) => match e.downcast_ref::<ErrorResponse>() {
                         Some(err) => match err {
-                            ErrorResponse::InvalidRequest => Err(Error::new(
+                            ErrorResponse::InvalidRequest { .. } => Err(Error::new(
                                 ErrorCode::BadRequest,
-                                ErrorResponse::InvalidRequest.to_string(),
+                                ErrorResponse::InvalidRequest {
+                                    error: err.to_string(),
+                                }
+                                .to_string(),
                             )),
-                            ErrorResponse::NoTodo => Err(Error::new(
+                            ErrorResponse::NoTodo { .. } => Err(Error::new(
                                 ErrorCode::BadRequest,
-                                ErrorResponse::NoTodo.to_string(),
+                                ErrorResponse::NoTodo {
+                                    id: todo_id.to_string(),
+                                }
+                                .to_string(),
                             )),
                         },
                         None => {
                             let error_message = e.to_string();
-
-                            Err(Error::new(ErrorCode::InternalServerError, error_message))
+                            Err(Error::new(
+                                ErrorCode::InternalServerError,
+                                ErrorResponse::InvalidRequest {
+                                    error: error_message,
+                                }
+                                .to_string(),
+                            ))
                         }
                     },
                 }
@@ -49,19 +60,33 @@ pub fn todo_router() -> RouterBuilder<Api> {
                     Ok(data) => Ok(data),
                     Err(e) => match e.downcast_ref::<ErrorResponse>() {
                         Some(err) => match err {
-                            ErrorResponse::InvalidRequest => Err(Error::new(
+                            ErrorResponse::InvalidRequest { .. } => Err(Error::new(
                                 ErrorCode::BadRequest,
-                                ErrorResponse::InvalidRequest.to_string(),
+                                ErrorResponse::InvalidRequest {
+                                    error: err.to_string(),
+                                }
+                                .to_string(),
                             )),
-                            ErrorResponse::NoTodo => Err(Error::new(
-                                ErrorCode::BadRequest,
-                                ErrorResponse::NoTodo.to_string(),
-                            )),
+                            _ => {
+                                let error_message = e.to_string();
+                                Err(Error::new(
+                                    ErrorCode::InternalServerError,
+                                    ErrorResponse::InvalidRequest {
+                                        error: error_message,
+                                    }
+                                    .to_string(),
+                                ))
+                            }
                         },
                         None => {
                             let error_message = e.to_string();
-
-                            Err(Error::new(ErrorCode::InternalServerError, error_message))
+                            Err(Error::new(
+                                ErrorCode::InternalServerError,
+                                ErrorResponse::InvalidRequest {
+                                    error: error_message,
+                                }
+                                .to_string(),
+                            ))
                         }
                     },
                 }
@@ -84,19 +109,30 @@ pub fn todo_router() -> RouterBuilder<Api> {
                     Ok(data) => Ok(data),
                     Err(e) => match e.downcast_ref::<ErrorResponse>() {
                         Some(err) => match err {
-                            ErrorResponse::InvalidRequest => Err(Error::new(
+                            ErrorResponse::InvalidRequest { .. } => Err(Error::new(
                                 ErrorCode::BadRequest,
-                                ErrorResponse::InvalidRequest.to_string(),
+                                ErrorResponse::InvalidRequest {
+                                    error: err.to_string(),
+                                }
+                                .to_string(),
                             )),
-                            ErrorResponse::NoTodo => Err(Error::new(
+                            ErrorResponse::NoTodo { .. } => Err(Error::new(
                                 ErrorCode::BadRequest,
-                                ErrorResponse::NoTodo.to_string(),
+                                ErrorResponse::NoTodo {
+                                    id: input.id.to_string(),
+                                }
+                                .to_string(),
                             )),
                         },
                         None => {
                             let error_message = e.to_string();
-
-                            Err(Error::new(ErrorCode::InternalServerError, error_message))
+                            Err(Error::new(
+                                ErrorCode::InternalServerError,
+                                ErrorResponse::InvalidRequest {
+                                    error: error_message,
+                                }
+                                .to_string(),
+                            ))
                         }
                     },
                 }
@@ -113,19 +149,30 @@ pub fn todo_router() -> RouterBuilder<Api> {
                     Ok(data) => Ok(data),
                     Err(e) => match e.downcast_ref::<ErrorResponse>() {
                         Some(err) => match err {
-                            ErrorResponse::InvalidRequest => Err(Error::new(
+                            ErrorResponse::InvalidRequest { error } => Err(Error::new(
                                 ErrorCode::BadRequest,
-                                ErrorResponse::InvalidRequest.to_string(),
+                                ErrorResponse::InvalidRequest {
+                                    error: err.to_string(),
+                                }
+                                .to_string(),
                             )),
-                            ErrorResponse::NoTodo => Err(Error::new(
+                            ErrorResponse::NoTodo { id } => Err(Error::new(
                                 ErrorCode::BadRequest,
-                                ErrorResponse::NoTodo.to_string(),
+                                ErrorResponse::NoTodo {
+                                    id: input.id.to_string(),
+                                }
+                                .to_string(),
                             )),
                         },
                         None => {
                             let error_message = e.to_string();
-
-                            Err(Error::new(ErrorCode::InternalServerError, error_message))
+                            Err(Error::new(
+                                ErrorCode::InternalServerError,
+                                ErrorResponse::InvalidRequest {
+                                    error: error_message,
+                                }
+                                .to_string(),
+                            ))
                         }
                     },
                 }
