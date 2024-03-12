@@ -2,7 +2,8 @@
 
 export type Procedures = {
     queries: 
-        { key: "todo.get", input: number, result: Task },
+        { key: "todo.get", input: number, result: Task } | 
+        { key: "todo.get_all", input: never, result: Task[] },
     mutations: 
         { key: "todo.create", input: CreateTodoArgs, result: Task } | 
         { key: "todo.delete", input: DeleteTodoArgs, result: boolean } | 
@@ -10,12 +11,12 @@ export type Procedures = {
     subscriptions: never
 };
 
-export type UpdateTodoArgs = { id: number; title: string; status: TaskStatus }
+export type DeleteTodoArgs = { id: number }
 
 export type TaskStatus = "Undone" | "Done"
 
-export type Task = { id: number; title: string; status: TaskStatus }
-
-export type DeleteTodoArgs = { id: number }
-
 export type CreateTodoArgs = { title: string; status: TaskStatus }
+
+export type UpdateTodoArgs = { id: number; title: string; status: TaskStatus }
+
+export type Task = { id: number; title: string; status: TaskStatus }

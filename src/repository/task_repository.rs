@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 use eyre::Result;
 use rspc::{ErrorCode, Type};
 use serde::{Deserialize, Serialize};
-use sqlx::FromRow;
+use sqlx::{Execute, FromRow, QueryBuilder};
 
 #[derive(Debug, Clone, Serialize, sqlx::prelude::Type, Deserialize, Type)]
 #[sqlx(type_name = "status_enum", rename_all = "lowercase")]
@@ -80,6 +80,18 @@ impl TaskRepository {
         Ok(Task::from(entity))
     }
 
+    pub async fn get_all_task(&self) -> Result<Vec<Task>> {
+        let query = "select * from tasks";
+
+        let entities = sqlx::query_as::<_, TaskEntity>(query)
+            .fetch_all(self.mm.db())
+            .await?;
+
+        let result = entities.into_iter().map(Task::from).collect();
+
+        Ok(result)
+    }
+
     pub async fn get_tasks(&self, page_size: i32, page_number: i32) -> Result<Vec<Task>> {
         let offset = (page_number - 1) * page_size;
 
@@ -102,29 +114,28 @@ impl TaskRepository {
     pub async fn update_task(
         &self,
         id: i32,
-        title: Option<&str>,        // Optional title
-        status: Option<TaskStatus>, // Optional status
+        title: Option<&str>,
+        status: Option<TaskStatus>,
     ) -> Result<Task> {
-        let mut query = "UPDATE tasks SET ".to_string();
-        let mut binds: Vec<String> = Vec::new();
-
+        println!("id={},title={:?},status={:?}", id, title, status);
+        let mut query = QueryBuilder::new("UPDATE tasks SET ");
         // Conditionally add title and status updates:
         if let Some(title) = title {
-            query.push_str("title = $1, ");
-            binds.push(title.to_owned());
+            query.push("title = ");
+            query.push_bind(title.to_string());
+            query.push(",");
         }
         if let Some(status) = status {
-            query.push_str("status = $2, ");
-            binds.push(status.to_string());
+            query.push("status = ");
+            query.push_bind(status);
         }
 
-        query.pop();
-        query.push_str(" WHERE id = $3 RETURNING *");
-        binds.push(id.to_string());
+        query.push(" WHERE id = ");
+        query.push_bind(id);
+        query.push(" RETURNING *");
 
-        // Execute the query with dynamic bindings:
-        let entities = sqlx::query_as::<_, Task>(&query)
-            .bind(&binds[..]) // Bind all values
+        let entities = query
+            .build_query_as::<Task>()
             .fetch_one(self.mm.db())
             .await?;
 
