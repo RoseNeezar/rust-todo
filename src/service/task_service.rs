@@ -21,6 +21,11 @@ impl TaskService {
         task
     }
 
+    pub async fn get_all_todos(&self) -> eyre::Result<Vec<Task>> {
+        let tasks = self.task_repository.get_all_task().await;
+        tasks
+    }
+
     pub async fn get_todos(&self, page_size: i32, page_number: i32) -> eyre::Result<Vec<Task>> {
         let tasks = self.task_repository.get_tasks(page_size, page_number).await;
         tasks

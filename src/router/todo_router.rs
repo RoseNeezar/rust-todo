@@ -9,6 +9,41 @@ use crate::{
 
 pub fn todo_router() -> RouterBuilder<Api> {
     PublicRouter::new()
+        .query("get_all", |t| {
+            t(|ctx, _: ()| async move {
+                match ctx.task_service.get_all_todos().await {
+                    Ok(data) => Ok(data),
+                    Err(e) => match e.downcast_ref::<ErrorResponse>() {
+                        Some(err) => match err {
+                            ErrorResponse::InvalidRequest { .. } => Err(Error::new(
+                                ErrorCode::BadRequest,
+                                ErrorResponse::InvalidRequest {
+                                    error: err.to_string(),
+                                }
+                                .to_string(),
+                            )),
+                            ErrorResponse::NoTodo { .. } => Err(Error::new(
+                                ErrorCode::BadRequest,
+                                ErrorResponse::NoTodo {
+                                    id: String::from("no todos"),
+                                }
+                                .to_string(),
+                            )),
+                        },
+                        None => {
+                            let error_message = e.to_string();
+                            Err(Error::new(
+                                ErrorCode::InternalServerError,
+                                ErrorResponse::InvalidRequest {
+                                    error: error_message,
+                                }
+                                .to_string(),
+                            ))
+                        }
+                    },
+                }
+            })
+        })
         .query("get", |t| {
             t(|ctx, todo_id: i32| async move {
                 match ctx.task_service.get_todo(todo_id).await {
