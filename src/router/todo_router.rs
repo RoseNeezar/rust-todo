@@ -68,6 +68,8 @@ pub fn todo_router() -> RouterBuilder<Api> {
                             )),
                         },
                         None => {
+                            print!("change");
+
                             let error_message = e.to_string();
                             Err(Error::new(
                                 ErrorCode::InternalServerError,
@@ -89,6 +91,8 @@ pub fn todo_router() -> RouterBuilder<Api> {
             }
 
             t(|ctx, input: CreateTodoArgs| async move {
+                print!("change");
+
                 match ctx
                     .task_service
                     .create_todo(input.title, input.status)
@@ -116,11 +120,11 @@ pub fn todo_router() -> RouterBuilder<Api> {
                             }
                         },
                         None => {
-                            let error_message = e.to_string();
+                            let error_messag = e.to_string();
                             Err(Error::new(
                                 ErrorCode::InternalServerError,
                                 ErrorResponse::InvalidRequest {
-                                    error: error_message,
+                                    error: error_messag,
                                 }
                                 .to_string(),
                             ))
