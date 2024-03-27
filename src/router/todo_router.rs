@@ -31,6 +31,8 @@ pub fn todo_router() -> RouterBuilder<Api> {
                             )),
                         },
                         None => {
+                            print!("change");
+
                             let error_message = e.to_string();
                             Err(Error::new(
                                 ErrorCode::InternalServerError,
