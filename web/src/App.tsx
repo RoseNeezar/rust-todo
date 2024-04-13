@@ -61,7 +61,7 @@ function App() {
       </div>
       <div className="flex flex-col m-2 p-5 rounded-2xl bg-red-500">
         {d?.map((s) => {
-          return <ListItem s={s} />;
+          return <ListItem key={s.id} s={s} />;
         })}
       </div>
     </div>

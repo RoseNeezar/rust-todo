@@ -3,7 +3,7 @@ use axum::http::{
     header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE},
     HeaderValue, Method,
 };
-use config::config::Config;
+use config::envs::Config;
 use dotenv::dotenv;
 use model::model_manager::ModelManager;
 use std::net::SocketAddr;
@@ -12,6 +12,7 @@ use tower_http::cors::CorsLayer;
 
 mod config;
 mod errors;
+mod middleware;
 mod model;
 mod repository;
 mod router;
@@ -36,7 +37,7 @@ async fn main() {
         .allow_credentials(true)
         .allow_headers([AUTHORIZATION, ACCEPT, CONTENT_TYPE]);
 
-    let routes = routes::new(cors, task_service.clone());
+    let routes = routes::new(cors, config, task_service.clone());
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 8000));
 
