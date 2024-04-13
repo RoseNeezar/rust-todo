@@ -12,23 +12,19 @@ impl TaskService {
     }
 
     pub async fn create_todo(&self, title: String, status: TaskStatus) -> eyre::Result<Task> {
-        let new_task = self.task_repository.create(title, status).await;
-        new_task
+        self.task_repository.create(title, status).await
     }
 
     pub async fn get_todo(&self, id: i32) -> eyre::Result<Task> {
-        let task = self.task_repository.get_task(id).await;
-        task
+        self.task_repository.get_task(id).await
     }
 
     pub async fn get_all_todos(&self) -> eyre::Result<Vec<Task>> {
-        let tasks = self.task_repository.get_all_task().await;
-        tasks
+        self.task_repository.get_all_task().await
     }
 
     pub async fn get_todos(&self, page_size: i32, page_number: i32) -> eyre::Result<Vec<Task>> {
-        let tasks = self.task_repository.get_tasks(page_size, page_number).await;
-        tasks
+        self.task_repository.get_tasks(page_size, page_number).await
     }
 
     pub async fn update_todo(
@@ -37,8 +33,7 @@ impl TaskService {
         title: Option<&str>,
         status: Option<TaskStatus>,
     ) -> eyre::Result<Task> {
-        let tasks = self.task_repository.update_task(id, title, status).await;
-        tasks
+        self.task_repository.update_task(id, title, status).await
     }
 
     pub async fn delete_todo(&self, id: i32) -> eyre::Result<bool> {

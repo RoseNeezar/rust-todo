@@ -1,7 +1,7 @@
-use crate::config::config::Config;
+use crate::config::envs::Config;
 use sqlx::migrate;
 
-use super::store::store::{new_db_pool, Db};
+use super::store::pool::{new_db_pool, Db};
 
 // endregion: --- Modules
 

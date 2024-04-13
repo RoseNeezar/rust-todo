@@ -4,11 +4,11 @@ use serde::{Deserialize, Serialize};
 use crate::{
     errors::ErrorResponse,
     repository::task_repository::TaskStatus,
-    routes::{Api, PublicRouter},
+    routes::{PrivateRouter, UserCtx},
 };
 
-pub fn todo_router() -> RouterBuilder<Api> {
-    PublicRouter::new()
+pub fn todo_router() -> RouterBuilder<UserCtx> {
+    PrivateRouter::new()
         .query("get_all", |t| {
             t(|ctx, _: ()| async move {
                 match ctx.task_service.get_all_todos().await {
@@ -31,7 +31,7 @@ pub fn todo_router() -> RouterBuilder<Api> {
                             )),
                         },
                         None => {
-                            print!("change");
+                            println!("change");
 
                             let error_message = e.to_string();
                             Err(Error::new(
@@ -68,7 +68,7 @@ pub fn todo_router() -> RouterBuilder<Api> {
                             )),
                         },
                         None => {
-                            print!("change");
+                            println!("change");
 
                             let error_message = e.to_string();
                             Err(Error::new(
@@ -80,6 +80,7 @@ pub fn todo_router() -> RouterBuilder<Api> {
                             ))
                         }
                     },
+                    // pnd pnc atomic transfer
                 }
             })
         })
@@ -91,7 +92,7 @@ pub fn todo_router() -> RouterBuilder<Api> {
             }
 
             t(|ctx, input: CreateTodoArgs| async move {
-                print!("change");
+                println!("change");
 
                 match ctx
                     .task_service
@@ -190,14 +191,14 @@ pub fn todo_router() -> RouterBuilder<Api> {
                     Ok(data) => Ok(data),
                     Err(e) => match e.downcast_ref::<ErrorResponse>() {
                         Some(err) => match err {
-                            ErrorResponse::InvalidRequest { error } => Err(Error::new(
+                            ErrorResponse::InvalidRequest { error: _ } => Err(Error::new(
                                 ErrorCode::BadRequest,
                                 ErrorResponse::InvalidRequest {
                                     error: err.to_string(),
                                 }
                                 .to_string(),
                             )),
-                            ErrorResponse::NoTodo { id } => Err(Error::new(
+                            ErrorResponse::NoTodo { id: _ } => Err(Error::new(
                                 ErrorCode::BadRequest,
                                 ErrorResponse::NoTodo {
                                     id: input.id.to_string(),
