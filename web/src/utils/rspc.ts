@@ -19,7 +19,7 @@ const request = async (input: RequestInfo | URL, init?: RequestInit) => {
 };
 
 const client = createClient<Procedures>({
-  transport: new FetchTransport("http://localhost:8000/rspc", request),
+  transport: new FetchTransport(import.meta.env.SERVER_URL, request),
 });
 
 const queryClient = new QueryClient();
