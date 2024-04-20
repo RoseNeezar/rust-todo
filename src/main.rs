@@ -6,7 +6,7 @@ use axum::http::{
 use config::envs::Config;
 use dotenv::dotenv;
 use model::model_manager::ModelManager;
-use std::net::SocketAddr;
+use shuttle_runtime::SecretStore;
 use std::sync::Arc;
 use tower_http::cors::CorsLayer;
 
@@ -20,10 +20,10 @@ mod routes;
 mod service;
 mod util;
 
-#[tokio::main]
-async fn main() {
+#[shuttle_runtime::main]
+async fn main(#[shuttle_runtime::Secrets] secrets: SecretStore) -> shuttle_axum::ShuttleAxum {
     dotenv().ok();
-    let config = Config::init();
+    let config = Config::init(secrets);
 
     let mm = ModelManager::new(&config).await.unwrap();
 
@@ -38,11 +38,5 @@ async fn main() {
         .allow_headers([AUTHORIZATION, ACCEPT, CONTENT_TYPE]);
 
     let routes = routes::new(cors, config, task_service.clone());
-
-    let addr = SocketAddr::from(([127, 0, 0, 1], 8000));
-
-    axum::Server::bind(&addr)
-        .serve(routes.into_make_service())
-        .await
-        .unwrap();
+    Ok(routes.await.into())
 }

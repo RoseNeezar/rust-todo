@@ -1,5 +1,6 @@
-use rspc::{Error, ErrorCode, RouterBuilder, Type};
+use rspc::{Error, ErrorCode, RouterBuilder};
 use serde::{Deserialize, Serialize};
+use specta::Type;
 
 use crate::{
     errors::ErrorResponse,
