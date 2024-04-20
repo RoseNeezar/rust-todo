@@ -1,16 +1,15 @@
 use std::sync::Arc;
 
 use axum::{
-    http::{header::AUTHORIZATION, HeaderValue},
+    http::{self, header::AUTHORIZATION, request::Parts, HeaderValue},
     routing::get,
     Router,
 };
-pub use rspc::RouterBuilder;
-use rspc::{integrations::httpz::Request, Config, Error, ErrorCode};
+use rspc::{Config, Error, ErrorCode};
+use rspc_axum;
 use std::path::PathBuf;
 use tower_http::cors::CorsLayer;
 use uuid::Uuid;
-
 pub type PublicRouter = rspc::Router<Api>;
 pub type PrivateRouter = rspc::Router<UserCtx>;
 
@@ -67,27 +66,36 @@ pub struct UserCtx {
     pub task_service: Arc<TaskService>,
     pub user_id: Option<Uuid>,
 }
+use http::HeaderMap;
+use std::ops::Deref;
 
-pub fn new(
+pub struct UnauthedCtx(pub HeaderMap);
+impl Deref for UnauthedCtx {
+    type Target = HeaderMap;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+pub async fn new(
     cors: CorsLayer,
     config: config::envs::Config,
     task_service: Arc<TaskService>,
-) -> axum::Router {
+) -> Router {
     let rspc = api_router().arced();
 
-    Router::new()
+    axum::Router::new()
         .route("/", get(|| async { "Hello 'rspc'!" }))
         .nest(
             "/rspc",
-            rspc.endpoint(move |req: Request| {
-                let token = req.headers().get(AUTHORIZATION).cloned();
+            rspc_axum::endpoint(rspc, |parts: Parts| {
+                let token = parts.headers.get(AUTHORIZATION).cloned();
                 Api {
                     task_service,
                     token,
                     config,
                 }
-            })
-            .axum(),
+            }),
         )
         .layer(cors)
 }

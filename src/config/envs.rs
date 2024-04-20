@@ -1,3 +1,4 @@
+use shuttle_runtime::SecretStore;
 #[derive(Debug, Clone)]
 pub struct Config {
     pub database_url: String,
@@ -5,9 +6,11 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn init() -> Config {
-        let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-        let jwt_secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+    pub fn init(secrets: SecretStore) -> Config {
+        let database_url = secrets
+            .get("DATABASE_URL")
+            .expect("DATABASE_URL must be set");
+        let jwt_secret = secrets.get("JWT_SECRET").expect("JWT_SECRET must be set");
 
         Config {
             database_url,

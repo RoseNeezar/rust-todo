@@ -11,12 +11,12 @@ export type Procedures = {
     subscriptions: never
 };
 
-export type DeleteTodoArgs = { id: number }
-
-export type TaskStatus = "Undone" | "Done"
+export type CreateTodoArgs = { title: string; status: TaskStatus }
 
 export type UpdateTodoArgs = { id: number; title: string; status: TaskStatus }
 
 export type Task = { id: number; title: string; status: TaskStatus }
 
-export type CreateTodoArgs = { title: string; status: TaskStatus }
+export type TaskStatus = "Undone" | "Done"
+
+export type DeleteTodoArgs = { id: number }

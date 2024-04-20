@@ -1,8 +1,8 @@
 use crate::model::model_manager::ModelManager;
 use chrono::{DateTime, Utc};
 use eyre::Result;
-use rspc::Type;
 use serde::{Deserialize, Serialize};
+use specta::Type;
 use sqlx::{FromRow, QueryBuilder};
 
 #[derive(Debug, Clone, Serialize, sqlx::prelude::Type, Deserialize, Type)]
