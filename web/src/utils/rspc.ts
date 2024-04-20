@@ -19,7 +19,7 @@ const request = async (input: RequestInfo | URL, init?: RequestInit) => {
 };
 
 const client = createClient<Procedures>({
-  transport: new FetchTransport(import.meta.env.SERVER_URL, request),
+  transport: new FetchTransport(import.meta.env.VITE_SERVER_URL, request),
 });
 
 const queryClient = new QueryClient();
