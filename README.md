@@ -24,6 +24,10 @@ Rust todo app user rspc and supabase auth
 - axum
 - sqlx
 
+## Devop
+
+- Shuttle rs
+
 ## Usage
 
 ```bash
